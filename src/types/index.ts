@@ -12,6 +12,25 @@ export interface ApiResponse<T = unknown> {
   errors?: unknown;
 }
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  role: UserRole;
+  isBlocked: boolean;
+  subscriptionPlan: SubscriptionPlan;
+  subscriptionExpiresAt?: Date | null;
+  name?: string;
+  businessName?: string;
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthUser;
+    }
+  }
+}
+
 export interface User {
   _id?: ObjectId;
   name: string;
