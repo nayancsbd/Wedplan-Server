@@ -1,8 +1,19 @@
 import type { ObjectId } from 'mongodb';
 
+export const SERVICE_CATEGORIES = [
+  'Photography & Videography',
+  'Wedding Venues',
+  'Decoration & Florist',
+  'Catering Services',
+  'Makeup & Styling',
+  'Wedding Fashion',
+] as const;
+
+export type ServiceCategory = (typeof SERVICE_CATEGORIES)[number];
+export type ServiceStatus = 'pending' | 'approved' | 'rejected';
 export type UserRole = 'customer' | 'vendor' | 'admin';
 export type SubscriptionPlan = 'free' | 'premium';
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type BookingStatus = 'pending' | 'confirmed' | 'accepted' | 'cancelled' | 'completed';
 export type TransactionStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
 export interface ApiResponse<T = unknown> {
@@ -49,15 +60,15 @@ export interface User {
 
 export interface Service {
   _id?: ObjectId;
-  vendorId: string;
-  title: string;
+  vendorId: ObjectId;
+  serviceName: string;
+  category: ServiceCategory;
   description: string;
-  category: string;
   price: number;
-  location?: string;
+  location: string;
   images: string[];
-  capacity?: number;
-  featured?: boolean;
+  status: ServiceStatus;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -65,7 +76,7 @@ export interface Service {
 export interface Booking {
   _id?: ObjectId;
   customerId: string;
-  vendorId: string;
+  vendorId: string | ObjectId;
   serviceId: ObjectId | string;
   eventDate: Date;
   status: BookingStatus;

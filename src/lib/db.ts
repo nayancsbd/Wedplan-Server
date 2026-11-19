@@ -5,6 +5,7 @@ import type { Service, Booking, Transaction } from '../types/index.js';
 interface GlobalMongo {
   _mongoClient?: MongoClient;
   _mongoDb?: Db;
+  _indexesCreated?: boolean;
 }
 
 const globalWithMongo = globalThis as typeof globalThis & GlobalMongo;
@@ -36,4 +37,20 @@ export const getBookingsCollection = (): Collection<Booking> => {
 
 export const getTransactionsCollection = (): Collection<Transaction> => {
   return db.collection<Transaction>('transactions');
+};
+
+export const initDbIndexes = async (): Promise<void> => {
+  if (globalWithMongo._indexesCreated) return;
+  try {
+    const services = getServicesCollection();
+    await services.createIndex({ status: 1 });
+    await services.createIndex({ category: 1 });
+    await services.createIndex({ location: 1 });
+    await services.createIndex({ vendorId: 1 });
+    await services.createIndex({ serviceName: 'text' });
+    await services.createIndex({ status: 1, isActive: 1 });
+    globalWithMongo._indexesCreated = true;
+  } catch (error) {
+    console.error('Failed to initialize database indexes:', error);
+  }
 };

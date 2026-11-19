@@ -7,6 +7,8 @@ import { auth } from './lib/auth.js';
 import { env } from './config/env.js';
 import { authenticate, authorize, isPremiumActive } from './middleware/auth.js';
 import { ApiError, errorHandler, notFoundHandler } from './middleware/error.js';
+import serviceRoutes from './routes/service.routes.js';
+import vendorRoutes from './routes/vendor.routes.js';
 
 export { ApiError } from './middleware/error.js';
 
@@ -52,6 +54,9 @@ app.get('/api/health', (_req, res) => {
     },
   });
 });
+
+app.use('/api/services', serviceRoutes);
+app.use('/api/vendor', vendorRoutes);
 
 app.get('/api/me', authenticate, (req, res) => {
   res.status(200).json({
