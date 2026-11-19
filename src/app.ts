@@ -2,6 +2,8 @@ import express, { type Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import { toNodeHandler } from 'better-auth/node';
+import { auth } from './lib/auth.js';
 import { env } from './config/env.js';
 import { ApiError, errorHandler, notFoundHandler } from './middleware/error.js';
 
@@ -19,6 +21,8 @@ app.use(
     credentials: true,
   })
 );
+
+app.all(['/api/auth', '/api/auth/*splat'], toNodeHandler(auth));
 
 app.use((req, res, next) => {
   if (req.originalUrl.startsWith('/api/webhooks/stripe')) {

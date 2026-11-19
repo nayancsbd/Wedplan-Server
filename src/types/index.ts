@@ -1,12 +1,31 @@
 import type { ObjectId } from 'mongodb';
 
 export type UserRole = 'customer' | 'vendor' | 'admin';
+export type SubscriptionPlan = 'free' | 'premium';
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type TransactionStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;
   errors?: unknown;
+}
+
+export interface User {
+  _id?: ObjectId;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image?: string;
+  role: UserRole;
+  isBlocked: boolean;
+  businessName?: string;
+  subscriptionPlan: SubscriptionPlan;
+  subscriptionExpiresAt?: Date;
+  stripeCustomerId?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Service {
@@ -24,8 +43,6 @@ export interface Service {
   updatedAt: Date;
 }
 
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
-
 export interface Booking {
   _id?: ObjectId;
   customerId: string;
@@ -38,8 +55,6 @@ export interface Booking {
   createdAt: Date;
   updatedAt: Date;
 }
-
-export type TransactionStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
 export interface Transaction {
   _id?: ObjectId;

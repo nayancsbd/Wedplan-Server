@@ -17,6 +17,61 @@ export const auth = betterAuth({
         defaultValue: 'customer',
         required: false,
       },
+      isBlocked: {
+        type: 'boolean',
+        defaultValue: false,
+        required: false,
+        input: false,
+      },
+      businessName: {
+        type: 'string',
+        required: false,
+      },
+      subscriptionPlan: {
+        type: 'string',
+        defaultValue: 'free',
+        required: false,
+        input: false,
+      },
+      subscriptionExpiresAt: {
+        type: 'date',
+        required: false,
+        input: false,
+      },
+      stripeCustomerId: {
+        type: 'string',
+        required: false,
+        input: false,
+      },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          const allowedRoles = ['customer', 'vendor'];
+          const role =
+            typeof user.role === 'string' && allowedRoles.includes(user.role)
+              ? user.role
+              : 'customer';
+          return {
+            data: {
+              ...user,
+              role,
+            },
+          };
+        },
+      },
+      update: {
+        before: async (user) => {
+          if ('role' in user) {
+            delete (user as Record<string, unknown>).role;
+          }
+          return {
+            data: user,
+          };
+        },
+      },
     },
   },
   emailAndPassword: {
@@ -32,6 +87,14 @@ export const auth = betterAuth({
   plugins: [jwt()],
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      if (
+        ctx.path === '/update-user' &&
+        ctx.body &&
+        typeof ctx.body === 'object' &&
+        'role' in ctx.body
+      ) {
+        delete (ctx.body as Record<string, unknown>).role;
+      }
       const password = ctx.body?.password || ctx.body?.newPassword;
       if (
         typeof password === 'string' &&
