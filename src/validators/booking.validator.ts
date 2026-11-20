@@ -23,3 +23,7 @@ export const createBookingSchema = z.object({
     .trim()
     .min(1, 'Message is required'),
 });
+
+export const updateBookingStatusSchema = z.object({
+  status: z.enum(['accepted', 'rejected']),
+});

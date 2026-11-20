@@ -3,12 +3,13 @@ import { ObjectId } from 'mongodb';
 import { getServicesCollection, getBookingsCollection } from '../lib/db.js';
 import { isPremiumActive } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error.js';
-import type { Service } from '../types/index.js';
+import type { Service, BookingStatus } from '../types/index.js';
 import {
   createServiceSchema,
   updateServiceSchema,
   toggleAvailabilitySchema,
 } from '../validators/service.validator.js';
+import { updateBookingStatusSchema } from '../validators/booking.validator.js';
 
 export const createService = async (
   req: Request,
@@ -301,6 +302,178 @@ export const getVendorOverview = async (
         isPremiumActive: isPremiumActive(user),
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getVendorBookings = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+    const vendorObjectId = new ObjectId(user.id);
+
+    const matchStage: Record<string, any> = {
+      vendorId: vendorObjectId,
+    };
+
+    const statusQuery = req.query.status;
+    const validStatuses: BookingStatus[] = ['pending', 'accepted', 'rejected', 'cancelled'];
+
+    if (statusQuery) {
+      if (typeof statusQuery === 'string' && validStatuses.includes(statusQuery as BookingStatus)) {
+        matchStage.status = statusQuery;
+      } else if (Array.isArray(statusQuery)) {
+        const filtered = statusQuery.filter(
+          (s): s is BookingStatus => typeof s === 'string' && validStatuses.includes(s as BookingStatus)
+        );
+        if (filtered.length > 0) {
+          matchStage.status = { $in: filtered };
+        }
+      } else {
+        throw new ApiError(
+          400,
+          `Invalid status filter. Allowed values: ${validStatuses.join(', ')}`
+        );
+      }
+    }
+
+    const pipeline = [
+      { $match: matchStage },
+      { $sort: { createdAt: -1 as const } },
+      {
+        $lookup: {
+          from: 'services',
+          localField: 'serviceId',
+          foreignField: '_id',
+          as: 'service',
+        },
+      },
+      {
+        $unwind: {
+          path: '$service',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'user',
+          localField: 'customerId',
+          foreignField: '_id',
+          as: 'customer',
+        },
+      },
+      {
+        $unwind: {
+          path: '$customer',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          serviceId: 1,
+          vendorId: 1,
+          customerId: 1,
+          eventDate: 1,
+          eventLocation: 1,
+          message: 1,
+          status: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          service: {
+            serviceName: '$service.serviceName',
+            category: '$service.category',
+            price: '$service.price',
+            location: '$service.location',
+            image: { $arrayElemAt: ['$service.images', 0] },
+            images: '$service.images',
+          },
+          customer: {
+            name: '$customer.name',
+            email: '$customer.email',
+            image: '$customer.image',
+          },
+        },
+      },
+    ];
+
+    const bookings = await getBookingsCollection().aggregate(pipeline).toArray();
+
+    res.status(200).json({
+      success: true,
+      message: 'Vendor bookings retrieved successfully',
+      data: bookings,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateVendorBookingStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+    const rawId = req.params.id;
+    const id = typeof rawId === 'string' ? rawId : Array.isArray(rawId) ? rawId[0] : '';
+
+    if (!id || !ObjectId.isValid(id)) {
+      throw new ApiError(400, 'Invalid booking ID format');
+    }
+
+    const data = updateBookingStatusSchema.parse(req.body);
+    const bookingObjectId = new ObjectId(id);
+    const vendorObjectId = new ObjectId(user.id);
+    const updatedAt = new Date();
+
+    const updated = await getBookingsCollection().findOneAndUpdate(
+      {
+        _id: bookingObjectId,
+        vendorId: vendorObjectId,
+        status: 'pending',
+      },
+      {
+        $set: {
+          status: data.status,
+          updatedAt,
+        },
+      },
+      { returnDocument: 'after' }
+    );
+
+    if (updated) {
+      res.status(200).json({
+        success: true,
+        message: `Booking has been ${data.status} successfully`,
+        data: updated,
+      });
+      return;
+    }
+
+    const existing = await getBookingsCollection().findOne({ _id: bookingObjectId });
+
+    if (!existing) {
+      throw new ApiError(404, 'Booking not found');
+    }
+
+    if (existing.vendorId.toString() !== user.id) {
+      throw new ApiError(403, 'Forbidden: You do not own this booking');
+    }
+
+    if (existing.status !== 'pending') {
+      throw new ApiError(
+        409,
+        `Cannot update booking with status '${existing.status}'. Only pending bookings can be processed.`
+      );
+    }
+
+    throw new ApiError(409, 'Failed to update booking status');
   } catch (error) {
     next(error);
   }
