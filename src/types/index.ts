@@ -13,7 +13,7 @@ export type ServiceCategory = (typeof SERVICE_CATEGORIES)[number];
 export type ServiceStatus = 'pending' | 'approved' | 'rejected';
 export type UserRole = 'customer' | 'vendor' | 'admin';
 export type SubscriptionPlan = 'free' | 'premium';
-export type BookingStatus = 'pending' | 'confirmed' | 'accepted' | 'cancelled' | 'completed';
+export type BookingStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled';
 export type TransactionStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
 export interface ApiResponse<T = unknown> {
@@ -75,13 +75,13 @@ export interface Service {
 
 export interface Booking {
   _id?: ObjectId;
-  customerId: string;
-  vendorId: string | ObjectId;
-  serviceId: ObjectId | string;
+  serviceId: ObjectId;
+  vendorId: ObjectId;
+  customerId: ObjectId;
   eventDate: Date;
+  eventLocation: string;
+  message: string;
   status: BookingStatus;
-  totalAmount: number;
-  notes?: string;
   createdAt: Date;
   updatedAt: Date;
 }

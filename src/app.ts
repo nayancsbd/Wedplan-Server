@@ -10,6 +10,8 @@ import { ApiError, errorHandler, notFoundHandler } from './middleware/error.js';
 import serviceRoutes from './routes/service.routes.js';
 import vendorRoutes from './routes/vendor.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
+import bookingRoutes from './routes/booking.routes.js';
+import customerRoutes from './routes/customer.routes.js';
 
 export { ApiError } from './middleware/error.js';
 
@@ -59,6 +61,8 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/services', serviceRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/customer', customerRoutes);
 
 app.get('/api/me', authenticate, (req, res) => {
   res.status(200).json({

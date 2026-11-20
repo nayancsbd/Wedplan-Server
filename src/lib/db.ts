@@ -49,6 +49,22 @@ export const initDbIndexes = async (): Promise<void> => {
     await services.createIndex({ vendorId: 1 });
     await services.createIndex({ serviceName: 'text' });
     await services.createIndex({ status: 1, isActive: 1 });
+
+    const bookings = getBookingsCollection();
+    await bookings.createIndex(
+      { customerId: 1, serviceId: 1, eventDate: 1 },
+      {
+        unique: true,
+        partialFilterExpression: {
+          status: { $in: ['pending', 'accepted'] },
+        },
+      }
+    );
+    await bookings.createIndex({ customerId: 1, createdAt: -1 });
+    await bookings.createIndex({ vendorId: 1, createdAt: -1 });
+    await bookings.createIndex({ serviceId: 1 });
+    await bookings.createIndex({ status: 1 });
+
     globalWithMongo._indexesCreated = true;
   } catch (error) {
     console.error('Failed to initialize database indexes:', error);

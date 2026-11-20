@@ -240,8 +240,8 @@ export const deleteVendorService = async (
     }
 
     const activeBooking = await getBookingsCollection().findOne({
-      $or: [{ serviceId }, { serviceId: id }],
-      status: { $in: ['pending', 'confirmed', 'accepted'] },
+      serviceId,
+      status: { $in: ['pending', 'accepted'] },
     });
 
     if (activeBooking) {
@@ -280,12 +280,12 @@ export const getVendorOverview = async (
           status: 'approved',
         }),
         getBookingsCollection().countDocuments({
-          $or: [{ vendorId: user.id }, { vendorId: vendorObjectId }],
+          vendorId: vendorObjectId,
           status: 'pending',
         }),
         getBookingsCollection().countDocuments({
-          $or: [{ vendorId: user.id }, { vendorId: vendorObjectId }],
-          status: { $in: ['confirmed', 'accepted'] },
+          vendorId: vendorObjectId,
+          status: 'accepted',
         }),
       ]);
 
