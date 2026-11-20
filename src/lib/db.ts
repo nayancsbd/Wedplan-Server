@@ -39,9 +39,17 @@ export const getTransactionsCollection = (): Collection<Transaction> => {
   return db.collection<Transaction>('transactions');
 };
 
+export const getUsersCollection = (): Collection<any> => {
+  return db.collection('user');
+};
+
 export const initDbIndexes = async (): Promise<void> => {
   if (globalWithMongo._indexesCreated) return;
   try {
+    const users = getUsersCollection();
+    await users.createIndex({ role: 1 });
+    await users.createIndex({ email: 1 });
+
     const services = getServicesCollection();
     await services.createIndex({ status: 1 });
     await services.createIndex({ category: 1 });

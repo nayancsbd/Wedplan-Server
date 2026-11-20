@@ -5,13 +5,14 @@ import morgan from 'morgan';
 import { toNodeHandler } from 'better-auth/node';
 import { auth } from './lib/auth.js';
 import { env } from './config/env.js';
-import { authenticate, authorize, isPremiumActive } from './middleware/auth.js';
+import { authenticate, isPremiumActive } from './middleware/auth.js';
 import { ApiError, errorHandler, notFoundHandler } from './middleware/error.js';
 import serviceRoutes from './routes/service.routes.js';
 import vendorRoutes from './routes/vendor.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import bookingRoutes from './routes/booking.routes.js';
 import customerRoutes from './routes/customer.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 export { ApiError } from './middleware/error.js';
 
@@ -63,6 +64,7 @@ app.use('/api/vendor', vendorRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/customer', customerRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/api/me', authenticate, (req, res) => {
   res.status(200).json({
@@ -71,30 +73,6 @@ app.get('/api/me', authenticate, (req, res) => {
       ...req.user,
       isPremiumActive: isPremiumActive(req.user),
     },
-  });
-});
-
-app.get('/api/test/admin', authenticate, authorize('admin'), (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Admin access granted',
-    user: req.user,
-  });
-});
-
-app.get('/api/test/vendor', authenticate, authorize('vendor'), (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Vendor access granted',
-    user: req.user,
-  });
-});
-
-app.get('/api/test/customer', authenticate, authorize('customer'), (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Customer access granted',
-    user: req.user,
   });
 });
 
