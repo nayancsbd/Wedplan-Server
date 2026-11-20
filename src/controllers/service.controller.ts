@@ -4,6 +4,7 @@ import { getServicesCollection } from '../lib/db.js';
 import { ApiError } from '../middleware/error.js';
 import { SERVICE_CATEGORIES, type Service } from '../types/index.js';
 import { serviceQuerySchema } from '../validators/service.validator.js';
+import { sanitizeRegex } from '../lib/sanitize.js';
 
 export const getPublicServices = async (
   req: Request,
@@ -18,7 +19,7 @@ export const getPublicServices = async (
     };
 
     if (query.search) {
-      filter.serviceName = { $regex: query.search, $options: 'i' };
+      filter.serviceName = { $regex: sanitizeRegex(query.search), $options: 'i' };
     }
 
     if (query.category) {
@@ -26,7 +27,7 @@ export const getPublicServices = async (
     }
 
     if (query.location) {
-      filter.location = { $regex: query.location, $options: 'i' };
+      filter.location = { $regex: sanitizeRegex(query.location), $options: 'i' };
     }
 
     const sortOption: Record<string, 1 | -1> =

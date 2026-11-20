@@ -43,12 +43,13 @@ export const getUsersCollection = (): Collection<any> => {
   return db.collection('user');
 };
 
-export const initDbIndexes = async (): Promise<void> => {
+export const ensureIndexes = async (): Promise<void> => {
   if (globalWithMongo._indexesCreated) return;
   try {
     const users = getUsersCollection();
     await users.createIndex({ role: 1 });
     await users.createIndex({ email: 1 });
+    await users.createIndex({ stripeCustomerId: 1 });
 
     const services = getServicesCollection();
     await services.createIndex({ status: 1 });
@@ -94,9 +95,13 @@ export const initDbIndexes = async (): Promise<void> => {
     );
     await transactions.createIndex({ vendorId: 1 });
     await transactions.createIndex({ userId: 1 });
+    await transactions.createIndex({ status: 1 });
+    await transactions.createIndex({ createdAt: -1 });
 
     globalWithMongo._indexesCreated = true;
   } catch (error) {
     console.error('Failed to initialize database indexes:', error);
   }
 };
+
+export const initDbIndexes = ensureIndexes;

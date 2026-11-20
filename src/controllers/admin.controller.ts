@@ -12,6 +12,7 @@ import {
   updateServiceStatusSchema,
   adminTransactionsQuerySchema,
 } from '../validators/admin.validator.js';
+import { sanitizeRegex } from '../lib/sanitize.js';
 
 export const getAdminOverview = async (
   _req: Request,
@@ -73,7 +74,7 @@ export const getAdminUsers = async (
     }
 
     if (search && search.length > 0) {
-      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escaped = sanitizeRegex(search);
       filter.$or = [
         { name: { $regex: escaped, $options: 'i' } },
         { email: { $regex: escaped, $options: 'i' } },
@@ -332,7 +333,7 @@ export const getAdminServices = async (
     }
 
     if (search && search.length > 0) {
-      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escaped = sanitizeRegex(search);
       matchStage.serviceName = { $regex: escaped, $options: 'i' };
     }
 

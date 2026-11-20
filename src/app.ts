@@ -17,6 +17,7 @@ import profileRoutes from './routes/profile.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import { handleStripeWebhook } from './controllers/webhook.controller.js';
 import { getProfile } from './controllers/profile.controller.js';
+import { authLimiter, writeLimiter } from './middleware/rateLimiter.js';
 
 export { ApiError } from './middleware/error.js';
 
@@ -33,16 +34,18 @@ app.use(
   })
 );
 
-app.all(['/api/auth', '/api/auth/*splat'], toNodeHandler(auth));
+app.all(['/api/auth', '/api/auth/*splat'], authLimiter, toNodeHandler(auth));
 
 app.post(
   '/api/webhooks/stripe',
-  express.raw({ type: 'application/json' }),
+  express.raw({ type: 'application/json', limit: '2mb' }),
   handleStripeWebhook
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+app.use('/api', writeLimiter);
 
 app.get('/api/health', (_req, res) => {
   res.status(200).json({

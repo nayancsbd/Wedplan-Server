@@ -83,6 +83,11 @@ export const errorHandler = (
     message = env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message;
   }
 
+  if (env.NODE_ENV === 'production' && statusCode === 500) {
+    message = 'Internal Server Error';
+    errors = undefined;
+  }
+
   if (env.NODE_ENV !== 'test' && (statusCode === 500 || !(err instanceof ApiError))) {
     console.error('Unhandled Error:', err);
   }
