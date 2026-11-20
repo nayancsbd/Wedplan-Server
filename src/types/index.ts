@@ -14,7 +14,7 @@ export type ServiceStatus = 'pending' | 'approved' | 'rejected';
 export type UserRole = 'customer' | 'vendor' | 'admin';
 export type SubscriptionPlan = 'free' | 'premium';
 export type BookingStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled';
-export type TransactionStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
+export type TransactionStatus = 'pending' | 'succeeded' | 'failed' | 'refunded' | 'paid';
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -93,14 +93,17 @@ export interface Booking {
 
 export interface Transaction {
   _id?: ObjectId;
-  userId: string;
+  userId?: string;
+  vendorId?: ObjectId | string;
   bookingId?: ObjectId | string;
   stripeSessionId?: string;
+  stripeSubscriptionId?: string;
   stripePaymentIntentId?: string;
+  stripeEventId?: string;
   amount: number;
   currency: string;
   status: TransactionStatus;
   plan?: string;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
 }

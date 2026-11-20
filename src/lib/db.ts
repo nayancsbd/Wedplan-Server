@@ -74,7 +74,25 @@ export const initDbIndexes = async (): Promise<void> => {
     await bookings.createIndex({ status: 1 });
 
     const transactions = getTransactionsCollection();
-    await transactions.createIndex({ stripeSessionId: 1 });
+    try {
+      const existingIndexes = await transactions.indexes();
+      const hasOldSessionIndex = existingIndexes.some(
+        (idx) => idx.name === 'stripeSessionId_1' && !idx.unique
+      );
+      if (hasOldSessionIndex) {
+        await transactions.dropIndex('stripeSessionId_1');
+      }
+    } catch {}
+
+    await transactions.createIndex(
+      { stripeSessionId: 1 },
+      { unique: true, partialFilterExpression: { stripeSessionId: { $type: 'string' } } }
+    );
+    await transactions.createIndex(
+      { stripeEventId: 1 },
+      { unique: true, partialFilterExpression: { stripeEventId: { $type: 'string' } } }
+    );
+    await transactions.createIndex({ vendorId: 1 });
     await transactions.createIndex({ userId: 1 });
 
     globalWithMongo._indexesCreated = true;

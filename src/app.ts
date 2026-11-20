@@ -15,6 +15,7 @@ import customerRoutes from './routes/customer.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import profileRoutes from './routes/profile.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
+import { handleStripeWebhook } from './controllers/webhook.controller.js';
 import { getProfile } from './controllers/profile.controller.js';
 
 export { ApiError } from './middleware/error.js';
@@ -34,21 +35,14 @@ app.use(
 
 app.all(['/api/auth', '/api/auth/*splat'], toNodeHandler(auth));
 
-app.use((req, res, next) => {
-  if (req.originalUrl.startsWith('/api/webhooks/stripe')) {
-    next();
-  } else {
-    express.json()(req, res, next);
-  }
-});
+app.post(
+  '/api/webhooks/stripe',
+  express.raw({ type: 'application/json' }),
+  handleStripeWebhook
+);
 
-app.use((req, res, next) => {
-  if (req.originalUrl.startsWith('/api/webhooks/stripe')) {
-    next();
-  } else {
-    express.urlencoded({ extended: true })(req, res, next);
-  }
-});
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get('/api/health', (_req, res) => {
   res.status(200).json({
