@@ -73,6 +73,10 @@ export const initDbIndexes = async (): Promise<void> => {
     await bookings.createIndex({ serviceId: 1 });
     await bookings.createIndex({ status: 1 });
 
+    const transactions = getTransactionsCollection();
+    await transactions.createIndex({ stripeSessionId: 1 });
+    await transactions.createIndex({ userId: 1 });
+
     globalWithMongo._indexesCreated = true;
   } catch (error) {
     console.error('Failed to initialize database indexes:', error);

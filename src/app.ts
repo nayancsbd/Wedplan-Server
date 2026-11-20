@@ -14,6 +14,7 @@ import bookingRoutes from './routes/booking.routes.js';
 import customerRoutes from './routes/customer.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import profileRoutes from './routes/profile.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
 import { getProfile } from './controllers/profile.controller.js';
 
 export { ApiError } from './middleware/error.js';
@@ -68,6 +69,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/customer', customerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get('/api/me', authenticate, getProfile);
 
