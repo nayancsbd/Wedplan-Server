@@ -73,7 +73,10 @@ export const authenticate = async (
       subscriptionPlan: user.subscriptionPlan || 'free',
       subscriptionExpiresAt: user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt) : null,
       name: user.name,
+      image: user.image,
       businessName: user.businessName,
+      phone: user.phone,
+      bio: user.bio,
     };
 
     req.user = authUser;

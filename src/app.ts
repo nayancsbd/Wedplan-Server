@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import { toNodeHandler } from 'better-auth/node';
 import { auth } from './lib/auth.js';
 import { env } from './config/env.js';
-import { authenticate, isPremiumActive } from './middleware/auth.js';
+import { authenticate } from './middleware/auth.js';
 import { ApiError, errorHandler, notFoundHandler } from './middleware/error.js';
 import serviceRoutes from './routes/service.routes.js';
 import vendorRoutes from './routes/vendor.routes.js';
@@ -13,6 +13,8 @@ import uploadRoutes from './routes/upload.routes.js';
 import bookingRoutes from './routes/booking.routes.js';
 import customerRoutes from './routes/customer.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import profileRoutes from './routes/profile.routes.js';
+import { getProfile } from './controllers/profile.controller.js';
 
 export { ApiError } from './middleware/error.js';
 
@@ -65,16 +67,9 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/customer', customerRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/profile', profileRoutes);
 
-app.get('/api/me', authenticate, (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: {
-      ...req.user,
-      isPremiumActive: isPremiumActive(req.user),
-    },
-  });
-});
+app.get('/api/me', authenticate, getProfile);
 
 app.use(notFoundHandler);
 

@@ -31,7 +31,10 @@ export interface AuthUser {
   subscriptionPlan: SubscriptionPlan;
   subscriptionExpiresAt?: Date | null;
   name?: string;
+  image?: string;
   businessName?: string;
+  phone?: string;
+  bio?: string;
 }
 
 declare global {
@@ -51,6 +54,8 @@ export interface User {
   role: UserRole;
   isBlocked: boolean;
   businessName?: string;
+  phone?: string;
+  bio?: string;
   subscriptionPlan: SubscriptionPlan;
   subscriptionExpiresAt?: Date;
   stripeCustomerId?: string;
