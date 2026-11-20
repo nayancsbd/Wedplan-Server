@@ -10,6 +10,7 @@ import {
   adminUsersQuerySchema,
   adminServicesQuerySchema,
   updateServiceStatusSchema,
+  adminTransactionsQuerySchema,
 } from '../validators/admin.validator.js';
 
 export const getAdminOverview = async (
@@ -479,6 +480,113 @@ export const deleteServiceByAdmin = async (
     res.status(200).json({
       success: true,
       message: 'Service deleted successfully by admin',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminTransactions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const query = adminTransactionsQuerySchema.parse(req.query);
+    const { status, page, limit } = query;
+    const skip = (page - 1) * limit;
+
+    const matchStage: Record<string, any> = {};
+
+    if (status) {
+      matchStage.status = status;
+    }
+
+    const pipeline: any[] = [
+      { $match: matchStage },
+      { $sort: { createdAt: -1 as const } },
+      {
+        $addFields: {
+          vendorObjId: {
+            $cond: {
+              if: { $ne: [{ $type: '$vendorId' }, 'missing'] },
+              then: {
+                $cond: {
+                  if: { $eq: [{ $type: '$vendorId' }, 'objectId'] },
+                  then: '$vendorId',
+                  else: {
+                    $cond: {
+                      if: { $regexMatch: { input: '$vendorId', regex: '^[0-9a-fA-F]{24}$' } },
+                      then: { $toObjectId: '$vendorId' },
+                      else: null,
+                    },
+                  },
+                },
+              },
+              else: {
+                $cond: {
+                  if: { $regexMatch: { input: '$userId', regex: '^[0-9a-fA-F]{24}$' } },
+                  then: { $toObjectId: '$userId' },
+                  else: null,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'user',
+          localField: 'vendorObjId',
+          foreignField: '_id',
+          as: 'vendor',
+        },
+      },
+      {
+        $unwind: {
+          path: '$vendor',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          plan: 1,
+          amount: 1,
+          currency: 1,
+          status: 1,
+          createdAt: 1,
+          stripeSessionId: 1,
+          stripeSubscriptionId: 1,
+          vendor: {
+            _id: '$vendor._id',
+            name: '$vendor.name',
+            email: '$vendor.email',
+            businessName: '$vendor.businessName',
+          },
+        },
+      },
+      { $skip: skip },
+      { $limit: limit },
+    ];
+
+    const [transactions, total] = await Promise.all([
+      getTransactionsCollection().aggregate(pipeline).toArray(),
+      getTransactionsCollection().countDocuments(matchStage),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: 'Transactions retrieved successfully',
+      data: {
+        transactions,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
     });
   } catch (error) {
     next(error);

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { ObjectId } from 'mongodb';
-import { getServicesCollection, getBookingsCollection } from '../lib/db.js';
+import { getServicesCollection, getBookingsCollection, getTransactionsCollection } from '../lib/db.js';
 import { isPremiumActive } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error.js';
 import type { Service, BookingStatus } from '../types/index.js';
@@ -10,6 +10,7 @@ import {
   toggleAvailabilitySchema,
 } from '../validators/service.validator.js';
 import { updateBookingStatusSchema } from '../validators/booking.validator.js';
+import { vendorTransactionsQuerySchema } from '../validators/payment.validator.js';
 
 export const createService = async (
   req: Request,
@@ -474,6 +475,65 @@ export const updateVendorBookingStatus = async (
     }
 
     throw new ApiError(409, 'Failed to update booking status');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getVendorTransactions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+    const vendorObjectId = new ObjectId(user.id);
+    const query = vendorTransactionsQuerySchema.parse(req.query);
+    const { page, limit } = query;
+    const skip = (page - 1) * limit;
+
+    const filter = {
+      $or: [
+        { vendorId: vendorObjectId },
+        { vendorId: user.id },
+        { userId: user.id },
+      ],
+    };
+
+    const [transactions, total] = await Promise.all([
+      getTransactionsCollection()
+        .find(filter, {
+          projection: {
+            _id: 1,
+            plan: 1,
+            amount: 1,
+            currency: 1,
+            status: 1,
+            createdAt: 1,
+            stripeSessionId: 1,
+            stripeSubscriptionId: 1,
+          },
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray(),
+      getTransactionsCollection().countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: 'Vendor transactions retrieved successfully',
+      data: {
+        transactions,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+    });
   } catch (error) {
     next(error);
   }

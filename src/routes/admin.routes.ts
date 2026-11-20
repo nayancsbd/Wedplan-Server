@@ -8,6 +8,7 @@ import {
   getAdminServices,
   updateServiceStatus,
   deleteServiceByAdmin,
+  getAdminTransactions,
 } from '../controllers/admin.controller.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
@@ -23,5 +24,6 @@ router.patch('/users/:id/unblock', unblockUser);
 router.get('/services', getAdminServices);
 router.patch('/services/:id/status', updateServiceStatus);
 router.delete('/services/:id', deleteServiceByAdmin);
+router.get('/transactions', getAdminTransactions);
 
 export default router;

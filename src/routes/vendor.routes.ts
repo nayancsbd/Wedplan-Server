@@ -8,6 +8,7 @@ import {
   getVendorOverview,
   getVendorBookings,
   updateVendorBookingStatus,
+  getVendorTransactions,
 } from '../controllers/vendor.controller.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
@@ -23,5 +24,6 @@ router.delete('/services/:id', deleteVendorService);
 router.get('/overview', getVendorOverview);
 router.get('/bookings', getVendorBookings);
 router.patch('/bookings/:id/status', updateVendorBookingStatus);
+router.get('/transactions', getVendorTransactions);
 
 export default router;

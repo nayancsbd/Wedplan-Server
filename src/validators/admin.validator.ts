@@ -19,3 +19,9 @@ export const adminServicesQuerySchema = z.object({
 export const updateServiceStatusSchema = z.object({
   status: z.enum(['approved', 'rejected', 'pending']),
 });
+
+export const adminTransactionsQuerySchema = z.object({
+  status: z.enum(['pending', 'succeeded', 'failed', 'refunded', 'paid']).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+});
