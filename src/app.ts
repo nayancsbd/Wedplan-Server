@@ -23,6 +23,8 @@ export { ApiError } from './middleware/error.js';
 
 export const app: Express = express();
 
+app.set('trust proxy', 1);
+
 app.use(helmet());
 
 app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));

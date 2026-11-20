@@ -85,6 +85,13 @@ export const auth = betterAuth({
     },
   },
   plugins: [jwt()],
+  advanced: {
+    useSecureCookies: env.NODE_ENV === 'production',
+    defaultCookieAttributes: {
+      secure: env.NODE_ENV === 'production',
+      sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
+    },
+  },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
       if (
