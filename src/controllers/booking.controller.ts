@@ -53,7 +53,7 @@ export const createBooking = async (
       customerId: customerObjectId,
       eventDate,
       eventLocation: data.eventLocation,
-      message: data.message,
+      message: data.message || '',
       status: 'pending',
       createdAt: now,
       updatedAt: now,

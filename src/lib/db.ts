@@ -13,10 +13,8 @@ const globalWithMongo = globalThis as typeof globalThis & GlobalMongo;
 const client = globalWithMongo._mongoClient ?? new MongoClient(env.MONGODB_URI);
 const db = globalWithMongo._mongoDb ?? client.db(env.DB_NAME);
 
-if (env.NODE_ENV !== 'production') {
-  globalWithMongo._mongoClient = client;
-  globalWithMongo._mongoDb = db;
-}
+globalWithMongo._mongoClient = client;
+globalWithMongo._mongoDb = db;
 
 export { client, db };
 

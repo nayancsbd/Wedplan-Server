@@ -26,10 +26,15 @@ const parseEnv = () => {
   if (!result.success) {
     console.error('❌ Invalid or missing environment variables:');
     const fieldErrors = result.error.flatten().fieldErrors;
+    const missingKeys: string[] = [];
     for (const [key, errors] of Object.entries(fieldErrors)) {
       if (errors && errors.length > 0) {
         console.error(`  - ${key}: ${errors.join(', ')}`);
+        missingKeys.push(`${key}: ${errors.join(', ')}`);
       }
+    }
+    if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+      throw new Error(`Invalid or missing environment variables: ${missingKeys.join('; ')}`);
     }
     process.exit(1);
   }

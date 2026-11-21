@@ -19,9 +19,9 @@ export const createBookingSchema = z.object({
     .trim()
     .min(1, 'Event location is required'),
   message: z
-    .string()
-    .trim()
-    .min(1, 'Message is required'),
+    .preprocess((val) => (typeof val === 'string' ? val.trim() : ''), z.string())
+    .optional()
+    .default(''),
 });
 
 export const updateBookingStatusSchema = z.object({
