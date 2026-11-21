@@ -2,8 +2,8 @@
 
 Backend API server for **WedPlan**, an elegant, role-based wedding planning platform connecting couples (customers) with wedding professionals (vendors) under platform administration.
 
-- **Client Repository**: [wedplan-client](https://github.com/your-username/wedplan-client)
-- **Server Repository**: [wedplan-server](https://github.com/your-username/wedplan-server)
+- **Client Repository**: [wedplan-client](https://github.com/nayancsbd/wedplan-client)
+- **Server Repository**: [wedplan-server](https://github.com/nayancsbd/wedplan-server)
 - **Live API Endpoint**: `https://api.wedplan.com` (or your deployed host URL)
 - **Live Web Application**: `https://wedplan.com`
 
@@ -103,9 +103,6 @@ All secrets are loaded and validated at startup using Zod (`src/config/env.ts`).
 | `STRIPE_WEBHOOK_SECRET` | Yes | Stripe Webhook Signing Secret (`whsec_...`). | `whsec_...` |
 | `STRIPE_PREMIUM_PRICE_ID` | Yes | Stripe Recurring Price ID for the Vendor Premium plan. | `price_xxx` |
 | `IMGBB_API_KEY` | Yes | ImgBB API key for server-side image upload proxy. | `your_imgbb_key` |
-| `ADMIN_EMAIL` | Yes | Seed admin user email. | `admin@wedplan.com` |
-| `ADMIN_PASSWORD` | Yes | Seed admin initial password (min 8 chars, 1 uppercase, 1 lowercase). | `Change_this_password_123` |
-| `ADMIN_NAME` | Yes | Seed admin display name. | `WedPlan Admin` |
 
 ---
 
@@ -118,7 +115,7 @@ All secrets are loaded and validated at startup using Zod (`src/config/env.ts`).
 
 ### 2. Clone & Install
 ```bash
-git clone https://github.com/your-username/wedplan-server.git
+git clone https://github.com/nayancsbd/wedplan-server.git
 cd wedplan-server
 npm install
 ```
@@ -167,8 +164,8 @@ The repository includes [`vercel.json`](./vercel.json) and [`api/index.js`](./ap
 
 1. Set the root directory or link the repository to Vercel.
 2. Add all environment variables in the Vercel Project Settings.
-3. Set `BETTER_AUTH_URL` to your production Vercel domain (e.g. `https://wedplan-api.vercel.app`).
-4. Set `CLIENT_URL` to your frontend production domain (e.g. `https://wedplan.vercel.app`).
+3. Set `BETTER_AUTH_URL` to your production Vercel domain (e.g. ``).
+4. Set `CLIENT_URL` to your frontend production domain (e.g. ``).
 
 ---
 

@@ -49,6 +49,20 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 app.use('/api', writeLimiter);
 
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'WedPlan API Server is running',
+  });
+});
+
+app.get('/api', (_req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'WedPlan API is running',
+  });
+});
+
 app.get('/api/health', (_req, res) => {
   res.status(200).json({
     success: true,
