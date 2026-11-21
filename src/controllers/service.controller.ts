@@ -30,12 +30,15 @@ export const getPublicServices = async (
       filter.location = { $regex: sanitizeRegex(query.location), $options: 'i' };
     }
 
+    const isRatingSort = query.sort === 'rating' || query.sort === 'highest_rated';
     const sortOption: Record<string, 1 | -1> =
       query.sort === 'price_asc'
-        ? { price: 1 }
+        ? { price: 1, _id: -1 }
         : query.sort === 'price_desc'
-        ? { price: -1 }
-        : { createdAt: -1 };
+        ? { price: -1, _id: -1 }
+        : isRatingSort
+        ? { effectiveRating: -1, createdAt: -1 }
+        : { createdAt: -1, _id: -1 };
 
     const page = query.page;
     const limit = query.limit;
@@ -45,6 +48,12 @@ export const getPublicServices = async (
 
     const pipeline = [
       { $match: filter },
+      {
+        $addFields: {
+          effectiveRating: { $ifNull: ['$rating', 5.0] },
+          effectiveReviewCount: { $ifNull: ['$reviewCount', 0] },
+        },
+      },
       { $sort: sortOption },
       { $skip: skip },
       { $limit: limit },
@@ -76,6 +85,8 @@ export const getPublicServices = async (
           isActive: 1,
           createdAt: 1,
           updatedAt: 1,
+          rating: '$effectiveRating',
+          reviewCount: '$effectiveReviewCount',
           vendor: {
             id: '$vendor._id',
             name: '$vendor.name',
@@ -174,6 +185,8 @@ export const getFeaturedServices = async (
           isActive: 1,
           createdAt: 1,
           updatedAt: 1,
+          rating: { $ifNull: ['$rating', 5.0] },
+          reviewCount: { $ifNull: ['$reviewCount', 0] },
           vendor: {
             id: '$vendor._id',
             name: '$vendor.name',
@@ -307,6 +320,8 @@ export const getServiceById = async (
           isActive: 1,
           createdAt: 1,
           updatedAt: 1,
+          rating: { $ifNull: ['$rating', 5.0] },
+          reviewCount: { $ifNull: ['$reviewCount', 0] },
           vendor: {
             id: '$vendor._id',
             name: '$vendor.name',

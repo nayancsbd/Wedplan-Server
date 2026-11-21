@@ -34,20 +34,28 @@ export const authenticate = async (
       throw new ApiError(401, 'Unauthorized: Missing bearer token');
     }
 
-    let payload: { sub?: string; id?: string };
+    let userId: string | undefined;
     try {
       const verified = await jwtVerify(token, jwks, {
         issuer: env.BETTER_AUTH_URL,
         audience: env.BETTER_AUTH_URL,
       });
-      payload = verified.payload as { sub?: string; id?: string };
+      const payload = verified.payload as { sub?: string; id?: string };
+      userId = payload.sub || payload.id;
     } catch {
-      throw new ApiError(401, 'Unauthorized: Invalid or expired token');
+      const sessionCol = db.collection('session');
+      const cleanToken = token.includes('.') ? token.split('.')[0] : token;
+      const session = await sessionCol.findOne({
+        $or: [{ token }, { token: cleanToken }],
+        expiresAt: { $gt: new Date() },
+      });
+      if (session) {
+        userId = session.userId ? session.userId.toString() : undefined;
+      }
     }
 
-    const userId = payload.sub || payload.id;
     if (!userId) {
-      throw new ApiError(401, 'Unauthorized: Invalid token payload');
+      throw new ApiError(401, 'Unauthorized: Invalid or expired token');
     }
 
     const userCol = db.collection('user');
