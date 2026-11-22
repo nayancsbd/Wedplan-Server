@@ -206,4 +206,4 @@ To enable live subscription activation and billing updates in production:
 
 ## API Testing Guide
 
-For a complete reference of test curl commands covering authentication (401), role access (403), ownership verification, duplicate booking prevention (409), free-plan limits (403), and webhook idempotency, consult [`docs/api-tests.md`](./docs/api-tests.md).
+For a complete reference of test curl commands covering authentication (401), role access (403), ownership verification, duplicate booking prevention (409), free-plan limits (403), and webhook idempotency, consult [`docs/api-tests.md`](./docs/api-tests.md). 
