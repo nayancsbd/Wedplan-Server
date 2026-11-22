@@ -12,7 +12,7 @@ import {
   toggleServiceAvailability,
   deleteVendorService,
 } from '../controllers/vendor.controller.js';
-import { authenticate, authorize } from '../middleware/auth.js';
+import { authenticate, optionalAuthenticate, authorize } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -20,7 +20,7 @@ router.get('/', getPublicServices);
 router.get('/featured', getFeaturedServices);
 router.get('/categories', getCategories);
 router.get('/locations', getLocations);
-router.get('/:id', authenticate, getServiceById);
+router.get('/:id', optionalAuthenticate, getServiceById);
 
 router.post('/', authenticate, authorize('vendor'), createService);
 router.put('/:id', authenticate, authorize('vendor'), updateVendorService);
