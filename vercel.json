@@ -1,10 +1,11 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
-  "rewrites": [
+  "redirects": [
     {
-      "source": "/(.*)",
-      "destination": "/api"
+      "source": "/",
+      "destination": "/api",
+      "permanent": false
     }
   ]
 }

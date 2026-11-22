@@ -25,6 +25,14 @@ export const app: Express = express();
 
 app.set('trust proxy', 1);
 
+app.use((req, _res, next) => {
+  const originalUrl = (req.headers['x-forwarded-uri'] || req.headers['x-matched-path']) as string | undefined;
+  if (originalUrl) {
+    req.url = originalUrl;
+  }
+  next();
+});
+
 app.use(helmet());
 
 app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
@@ -35,6 +43,28 @@ app.use(
     credentials: true,
   })
 );
+
+app.get('/api/auth/token', authLimiter, async (req, res, next) => {
+  try {
+    const headers = new Headers();
+    for (const [k, v] of Object.entries(req.headers)) {
+      if (typeof v === 'string') {
+        headers.set(k, v);
+      } else if (Array.isArray(v)) {
+        headers.set(k, v.join(', '));
+      }
+    }
+    const tokenData = await auth.api.getToken({ headers });
+    res.status(200).json(tokenData);
+  } catch (err: unknown) {
+    const status = (err as { status?: string | number })?.status;
+    if (status === 'UNAUTHORIZED' || status === 401) {
+      res.status(200).json({ token: null, message: 'Unauthenticated' });
+      return;
+    }
+    next(err);
+  }
+});
 
 app.all(['/api/auth', '/api/auth/*splat'], authLimiter, toNodeHandler(auth));
 
