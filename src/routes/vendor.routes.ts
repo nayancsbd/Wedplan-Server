@@ -9,6 +9,7 @@ import {
   getVendorBookings,
   updateVendorBookingStatus,
   getVendorTransactions,
+  getVendorSubscription,
 } from '../controllers/vendor.controller.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
@@ -37,5 +38,6 @@ router.post('/bookings/:id/reject', (req, res, next) => {
   return updateVendorBookingStatus(req, res, next);
 });
 router.get('/transactions', getVendorTransactions);
+router.get('/subscription', getVendorSubscription);
 
 export default router;

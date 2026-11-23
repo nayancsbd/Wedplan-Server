@@ -480,7 +480,7 @@ export const updateVendorBookingStatus = async (
   }
 };
 
-export const getVendorTransactions = async (
+export const getVendorSubscription = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -488,13 +488,49 @@ export const getVendorTransactions = async (
   try {
     const user = req.user!;
     const vendorObjectId = new ObjectId(user.id);
+
+    const activeServicesCount = await getServicesCollection().countDocuments({
+      vendorId: vendorObjectId,
+      isActive: true,
+      status: 'approved',
+    });
+
+    const isPrem = isPremiumActive(user);
+
+    res.status(200).json({
+      success: true,
+      message: 'Vendor subscription retrieved successfully',
+      data: {
+        plan: isPrem ? 'premium' : (user.subscriptionPlan || 'free'),
+        subscriptionPlan: isPrem ? 'premium' : (user.subscriptionPlan || 'free'),
+        status: isPrem ? 'active' : 'active',
+        expiresAt: user.subscriptionExpiresAt || null,
+        subscriptionExpiresAt: user.subscriptionExpiresAt || null,
+        activeServicesCount,
+        maxServices: isPrem ? 'unlimited' : 3,
+        isPremiumActive: isPrem,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getVendorTransactions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user!;
+    const vendorObjectId = ObjectId.isValid(user.id) ? new ObjectId(user.id) : null;
     const query = vendorTransactionsQuerySchema.parse(req.query);
     const { page, limit } = query;
     const skip = (page - 1) * limit;
 
     const filter = {
       $or: [
-        { vendorId: vendorObjectId },
+        ...(vendorObjectId ? [{ vendorId: vendorObjectId }] : []),
         { vendorId: user.id },
         { userId: user.id },
       ],

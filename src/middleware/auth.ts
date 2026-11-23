@@ -24,14 +24,33 @@ export const authenticate = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    let token: string | undefined;
+
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new ApiError(401, 'Unauthorized: Missing or invalid authorization header');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1]?.trim();
     }
 
-    const token = authHeader.split(' ')[1];
+    if (!token && req.headers.cookie) {
+      const cookieHeader = req.headers.cookie;
+      const parsedCookies = Object.fromEntries(
+        cookieHeader
+          .split(';')
+          .map((c) => {
+            const idx = c.indexOf('=');
+            if (idx === -1) return [c.trim(), ''];
+            return [c.slice(0, idx).trim(), decodeURIComponent(c.slice(idx + 1).trim())];
+          })
+      );
+
+      token =
+        parsedCookies['better-auth.session_token'] ||
+        parsedCookies['__Secure-better-auth.session_token'] ||
+        parsedCookies['wedplan_jwt_token'];
+    }
+
     if (!token) {
-      throw new ApiError(401, 'Unauthorized: Missing bearer token');
+      throw new ApiError(401, 'Unauthorized: Missing or invalid authorization credentials');
     }
 
     let userId: string | undefined;
@@ -100,13 +119,31 @@ export const optionalAuthenticate = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    let token: string | undefined;
+
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      next();
-      return;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1]?.trim();
     }
 
-    const token = authHeader.split(' ')[1];
+    if (!token && req.headers.cookie) {
+      const cookieHeader = req.headers.cookie;
+      const parsedCookies = Object.fromEntries(
+        cookieHeader
+          .split(';')
+          .map((c) => {
+            const idx = c.indexOf('=');
+            if (idx === -1) return [c.trim(), ''];
+            return [c.slice(0, idx).trim(), decodeURIComponent(c.slice(idx + 1).trim())];
+          })
+      );
+
+      token =
+        parsedCookies['better-auth.session_token'] ||
+        parsedCookies['__Secure-better-auth.session_token'] ||
+        parsedCookies['wedplan_jwt_token'];
+    }
+
     if (!token) {
       next();
       return;

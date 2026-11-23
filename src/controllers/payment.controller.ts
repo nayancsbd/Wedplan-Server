@@ -145,19 +145,69 @@ export const getSessionStatus = async (
       throw new ApiError(404, 'User not found');
     }
 
-    const transaction = await getTransactionsCollection().findOne({
+    let transaction = await getTransactionsCollection().findOne({
       stripeSessionId: sessionId,
     });
+
+    if (session.payment_status === 'paid') {
+      let subscriptionExpiresAt = new Date(Date.now() + 30 * 86400000);
+      if (session.subscription && typeof session.subscription === 'string') {
+        try {
+          const sub = (await stripe.subscriptions.retrieve(session.subscription)) as any;
+          if (sub?.current_period_end) {
+            subscriptionExpiresAt = new Date(sub.current_period_end * 1000);
+          }
+        } catch {
+        }
+      }
+
+      if (dbUser.subscriptionPlan !== 'premium') {
+        await getUsersCollection().updateOne(userQuery, {
+          $set: {
+            subscriptionPlan: 'premium',
+            subscriptionExpiresAt,
+            updatedAt: new Date(),
+          },
+        });
+        dbUser.subscriptionPlan = 'premium';
+        dbUser.subscriptionExpiresAt = subscriptionExpiresAt;
+      }
+
+      if (!transaction) {
+        try {
+          const newTx = {
+            vendorId: userObjectId || vendorId,
+            userId: vendorId,
+            plan: 'premium' as const,
+            amount: session.amount_total ? session.amount_total / 100 : 0,
+            currency: session.currency || 'usd',
+            stripeSessionId: sessionId,
+            stripeSubscriptionId: typeof session.subscription === 'string' ? session.subscription : undefined,
+            status: 'paid' as const,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          const insertRes = await getTransactionsCollection().insertOne(newTx);
+          transaction = { _id: insertRes.insertedId, ...newTx };
+        } catch {
+        }
+      }
+    }
+
+    const isPrem = isPremiumActive(dbUser) || dbUser.subscriptionPlan === 'premium';
 
     res.status(200).json({
       success: true,
       message: 'Session status retrieved successfully',
       data: {
+        status: session.status,
+        payment_status: session.payment_status,
+        isPremium: isPrem,
         plan: dbUser.subscriptionPlan || 'free',
         subscriptionPlan: dbUser.subscriptionPlan || 'free',
         expiry: dbUser.subscriptionExpiresAt || null,
         subscriptionExpiresAt: dbUser.subscriptionExpiresAt || null,
-        isPremiumActive: isPremiumActive(dbUser),
+        isPremiumActive: isPrem,
         hasTransaction: Boolean(transaction),
         transaction: transaction
           ? {

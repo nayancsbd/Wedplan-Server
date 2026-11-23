@@ -5,6 +5,13 @@ import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { db, client } from './db.js';
 import { env } from '../config/env.js';
 
+const isProductionHttps =
+  env.NODE_ENV === 'production' &&
+  !env.CLIENT_URL.startsWith('http://localhost') &&
+  !env.CLIENT_URL.startsWith('http://127.0.0.1') &&
+  !env.BETTER_AUTH_URL.startsWith('http://localhost') &&
+  !env.BETTER_AUTH_URL.startsWith('http://127.0.0.1');
+
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
@@ -86,10 +93,10 @@ export const auth = betterAuth({
   },
   plugins: [jwt()],
   advanced: {
-    useSecureCookies: env.NODE_ENV === 'production',
+    useSecureCookies: isProductionHttps,
     defaultCookieAttributes: {
-      secure: env.NODE_ENV === 'production',
-      sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: isProductionHttps,
+      sameSite: isProductionHttps ? 'none' : 'lax',
     },
   },
   hooks: {
